@@ -30,7 +30,7 @@ struct node *create_node(int product_id , string product_name , int quantity ){
 
 void write_data(){
 
-    std::ofstream excelFile("inventory.csv");
+    std::ofstream excelFile("InventoryManagementSystem/inventory.csv");
 
     if(excelFile.is_open()){
         excelFile<<"product_id,product_name,quantity\n";
@@ -49,7 +49,7 @@ void write_data(){
 
 void load_data(){
 
-    std::ifstream excelFile("inventory.csv");
+    std::ifstream excelFile("InventoryManagementSystem/inventory.csv");
 
     if(excelFile.is_open()){
 
