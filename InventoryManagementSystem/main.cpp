@@ -1,5 +1,7 @@
 #include <iostream>
 #include <string>
+#include <sstream>
+#include <fstream>
 using namespace std;
 
 struct node{
@@ -14,15 +16,67 @@ struct node * head = NULL;
 
 struct node *create_node(int product_id , string product_name , int quantity ){
 
-    struct node *newnode = (struct node *)malloc(sizeof(struct node));
+    struct node *newnode = new node() ;
     newnode->product_id = product_id ;
     newnode->product_name = product_name ;
     newnode->quantity = quantity ;
-    newnode->prev = NULL;
     newnode->next = head ;
     head = newnode ;
 
     return newnode;
+
+}
+
+
+void write_data(){
+
+    std::ofstream excelFile("inventory.csv");
+
+    if(excelFile.is_open()){
+        excelFile<<"product_id,product_name,quantity\n";
+        struct node *temp = head ;
+        while( temp != NULL ){
+            excelFile<<temp->product_id<<","<<temp->product_name<<","<<temp->quantity<<"\n";
+            temp = temp->next;
+        }
+        excelFile.close();
+        cout<<endl<<" Changes saved successfully"<<endl;
+        return ;
+    }
+    cout<<endl<<" Error in opening the file to store the changes. Please don't exit the program without saving the changes."<<endl;
+
+}
+
+void load_data(){
+
+    std::ifstream excelFile("inventory.csv");
+
+    if(excelFile.is_open()){
+
+        string line ;
+
+        if(!getline(excelFile,line)){  // Empty File and also avoids header ;
+            excelFile.close();
+            return ;
+        }
+
+        while(getline(excelFile,line)){
+            if(line.empty()) continue;
+
+            stringstream ss(line);
+            string id , product_name , Quantity ;
+            if(getline( ss , id , ',') && getline( ss , product_name , ',') && getline( ss , Quantity , ',')){
+                int product_id = stoi(id);
+                int quantity = stoi(Quantity);
+                create_node( product_id , product_name , quantity );
+                
+            }
+        }
+        return ;
+    }
+
+    cout<<endl<<" Couldn't load your data"<< endl << " Starting trial Inventory System, no changes would save" ;
+    return ;
 
 }
 
@@ -35,6 +89,7 @@ struct node *search_product_name( string product_name ){
         if( product_name == temp->product_name ){
             return temp;
         }
+        temp = temp->next ;
     }
 
     return NULL;
@@ -48,6 +103,7 @@ struct node *search_product_id(int product_id){
         if( product_id == temp->product_id ){
             return temp;
         }
+        temp = temp->next ;
     }
 
     return NULL;
@@ -61,9 +117,10 @@ void add_new_product_to_inventory(){
     int quantity;
     cout<<endl<<"\t\t---------- STOCK NEW PRODUCT TO THE INVENTORY ----------\t\t"<<endl;
     cout<<" Enter the product name ";
-    cin>>product_name;
+    cin.ignore() ;
+    getline( cin , product_name ) ;
 
-    if(search_product_name( product_name )){
+    if(search_product_name( product_name ) != NULL ){
         cout<<endl<<" The product is already in the inventory";
         return;
     }
@@ -71,7 +128,7 @@ void add_new_product_to_inventory(){
     cout<<endl<<" Enter the product id :- ";
     cin>>product_id;
 
-    if(search_product_id(product_id)){
+    if(search_product_id(product_id) != NULL){
         cout<<endl<<" The product id is registered with other product";
         return;
     }
@@ -99,11 +156,11 @@ void sell_product(){
     cout<<endl<<endl<<"\t\t---------- STOCK OUT PRODUCT ----------\t\t"<<endl;
 
     cout<<endl<<" Enter the product name to sell :- ";
-    cin>> product_name ;
-
+    cin.ignore();
+    getline( cin , product_name ) ;
     struct node *temp = search_product_name( product_name );
 
-    if(temp){
+    if(temp != NULL){
 
         cout<<" Enter quantity to sell :- ";
         cin>> quantity ;
@@ -136,8 +193,9 @@ void restock_product(){
     cout<<endl<<endl<<"\t\t---------- RESTOCK PRODUCT (IN) ----------\t\t"<<endl;
 
     cout<<endl<<" Enter the product name to restock :- ";
-    cin>> product_name ;
-
+    cin.ignore() ;
+    getline( cin , product_name ) ;
+ 
     struct node *temp = search_product_name( product_name );
 
     if(temp){
@@ -186,7 +244,11 @@ void view_inventory(){
 
 }
 
+
+
  int main(){
+
+    load_data();
 
     int choice = -1 ;
     while(true){
@@ -195,7 +257,8 @@ void view_inventory(){
         cout << endl << "\t\t\t 2. ADD NEW PRODUCT TO INVENTORY \t\t\t" <<endl;
         cout << endl << "\t\t\t 3. SELL PRODUCT \t\t\t" <<endl;
         cout << endl << "\t\t\t 4. RESTOCK PRODUCT \t\t\t" <<endl;
-        cout << endl << "\t\t\t 5. EXIT \t\t\t" <<endl;
+        cout << endl << "\t\t\t 5. SAVE CHANGES \t\t\t" <<endl ;
+        cout << endl << "\t\t\t 6. EXIT \t\t\t" <<endl;
 
         cout << endl << " Enter command (1/2/3/4/5) :- ";
         cin >> choice ; 
@@ -212,7 +275,11 @@ void view_inventory(){
             case 4 : restock_product();
                 break ;
 
-            case 5 :
+            case 5 : write_data();
+                break ; 
+
+            case 6 :
+                write_data();
                 cout << endl << " Exiting the program ";
                 cout << endl ;
                 exit(0);
